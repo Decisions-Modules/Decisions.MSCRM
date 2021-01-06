@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0" DefaultTargets="build_all">
+		 
+	<PropertyGroup>
+	    <CreateModule>..\..\output\binutils\CreateModule.exe</CreateModule>
+	    <CreateModuleVersion>..\..\output\binutils\UpdateModuleVersionOnBuild.exe</CreateModuleVersion>
+	    <CheckChanges>..\..\output\binutils\CheckForFileChanges.exe</CheckChanges>
+	</PropertyGroup>
+  
+ 	<Target Name="build_all">
+		<Exec Command="$(CheckChanges) &quot;.&quot;" ConsoleToMsBuild="true">
+			<Output TaskParameter="ConsoleOutput" PropertyName="ShouldBuild" />
+		</Exec>
+		<CallTarget Targets="do_build" Condition="$(ShouldBuild.Contains('CHANGES'))" />
+		<Exec Command="$(CheckChanges) &quot;.&quot;" ConsoleToMsBuild="true"/>
+	</Target>
+
+	<Target Name="do_build">
+    <CallTarget Targets="build_module"/>
+  </Target>
+  
+  <Target Name="build_module">
+    <Exec Command="$(CreateModule) -buildmodule Decisions.MSCRM -output &quot;..\..\output\modules&quot; -buildfile Module.Build.xml"/> 		
+	        
+	<RemoveDir Directories="../../output/modules/Decisions.MSCRM" ContinueOnError="True"/>
+    <MakeDir Directories="../../output/modules/Decisions.MSCRM" ContinueOnError="True"/>
+	
+	<copy SourceFiles="..\..\output\modules\Decisions.MSCRM\Decisions.MSCRM.dll" DestinationFolder=".\Decisions.MSCRM\Module"/>    
+  </Target> 
+  
+  <Target Name="build_module">
+	  <Exec Command="$(CreateModuleVersion) &quot;..\..\Build.version&quot; &quot;Module.Build.xml&quot; &quot;Module.Build.versioned.xml&quot; &quot;..\..\Version.cs&quot; false &quot;Decisions.MSCRM&quot; &quot;..\AllModules.xml&quot;"/>
+	  <Exec Command="$(CreateModule) -buildmodule Decisions.MSCRM -output &quot;..\..\output\modules&quot; -buildfile Module.Build.versioned.xml"/>   
+  </Target>
+	
+</Project>
